@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#!/usr/bin/python
-
 from gi.repository import Gtk, GLib, GObject
 import threading
 import time
