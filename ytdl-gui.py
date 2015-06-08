@@ -122,6 +122,7 @@ class Handler:
         video_name = fileName.get_text()
         video_name += "."+fmt[1]
         fmt_code = fmt[0]
+        end_iter = textView.get_buffer().get_end_iter()
 
         print "Saving "+video_name+"to"+dest, fmt, link, 
 
@@ -132,10 +133,17 @@ class Handler:
         percent = 0.0
         cont = statusBar.get_context_id("Talk about data")
         statusBar.push(cont, "Downloading...")
+        string = ''
 
         while True:
-            string = download.read_nonblocking(1000, 10)
+            try:
+                string = download.read_nonblocking(1000, 10)
+            except:
+                GLib.idle_add(self.updateDownloadProgress, 1.00)
+                print 'Download Thread Done'
+                break
             print string
+            textView.get_buffer().insert(end_iter, string+"\n")
             idx = string.find("%")
             if(idx >= 4):
                 try:
