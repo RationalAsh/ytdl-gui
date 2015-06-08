@@ -10,7 +10,8 @@ import re
 #from scipy.signal import
 
 class Handler:
-    link = ""    
+    link = ""
+    #Function to show terminal output
     def showOutput(self, op_str):
         global textView
         global statusBar
@@ -19,14 +20,42 @@ class Handler:
         cont = statusBar.get_context_id("Talk about data")
         statusBar.pop(cont)
         #print op_str, l
+    
+    #Helper function to extract formats
+    def extractFormats(self, terminal_output):
+        lines = terminal_output.split('\n')
+        idx = 0
+        final_idx = 0
+        fmts = []
+        for l in lines:
+            if 'format code' in l:
+                idx = lines.index(l)
+                final_idx = idx
+        for l in lines[idx:]:
+            if 'DASH' in l:
+                final_idx += 1
+        temp = lines[final_idx+1:]
+        for lin in temp:
+            fmts.append([s.strip() for s in lin.split(' ') if s.strip()])
+        return fmts
+
+    def updateFormats(self, formats):
+        global formatSel
+        for i in xrange(len(formats) - 1):
+            print formats[i][0] + " " +formats[i][1] + " " + formats[i][2], i
+            formatSel.append_text(formats[i][0] + " " +formats[i][1] + " " + formats[i][2])
         
+
+    #Function that populates the dropdown menu with available formats
     def getFormats(self):
         #GLib.idle_add()
         ydl = subprocess.Popen(["youtube-dl", self.link, "-F"], stdout=subprocess.PIPE)
         output = ydl.communicate()[0]
         lines = output.split('\n')
-        fmtBest = re.findall(r'\d+', lines[len(lines)-2])[0]
+        #fmtBest = re.findall(r'\d+', lines[len(lines)-2])[0]
+        fmts = self.extractFormats(output)
         GLib.idle_add(self.showOutput, output)
+        GLib.idle_add(self.updateFormats, fmts)
         #print "This is a thread! :D", self.link
 
     def updateDownloadProgress(self, i):
