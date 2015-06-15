@@ -1,14 +1,22 @@
 #!/usr/bin/python
-
-from gi.repository import Gtk, GLib, GObject
-import threading
-import time
-from datetime import datetime
-import subprocess
-import re
-import pexpect
+try:
+    from gi.repository import Gtk, GLib, GObject
+    import threading
+    import time
+    from datetime import datetime
+    import subprocess
+    import re
+    import pexpect
+except ImportError:
+    print "The following module need to be installed before you run this program"
+    print pexpect
+    print Gtk
+    
 #import serial
 #from scipy.signal import
+
+global downloadFlag
+downloadFlag = 1
 
 class Handler:
     link = ""
@@ -65,19 +73,6 @@ class Handler:
         global pbar
         pbar.set_fraction(i)
         
-    # def vidDownloadThread(link, destination):
-    #     ydl = subprocess.Popen(["youtube-dl", link, "-F"], stdout=subprocess.PIPE)
-    #     i = 0
-    #     while True:
-    #         inline = ydl.stdout.readline()
-    #         if not inline:
-    #             break
-    #         print inline, destination
-    #         i += 1
-    #         fract = (i%100)/100.0
-    #         Glib.idle_add(self.updateDownloadProgress, fract)
-    #         time.sleep(0.5)
-        
 
     def onDeleteWindow(self, *args):
         Gtk.main_quit(*args)
@@ -100,6 +95,8 @@ class Handler:
     def onStartDownload(self, fileChooser, *args):
         global textView
         global formatSel
+        global downloadFlag
+        downloadFlag = 1
         end_iter = textView.get_buffer().get_end_iter()
         textView.get_buffer().insert(end_iter, "Downloading "+formatSel.get_active_text().split(" ")[0]+" file to ")
         try:
@@ -111,12 +108,18 @@ class Handler:
         download_t.daemon = True
         download_t.start()
 
+    def onStopDownload(self, *args):
+        global downloadFlag
+        print "Stopping Download"
+        downloadFlag = 0
+
     def vidDownloadThread(self, dest, fmt):
         global textView
         global formatSel
         global formatList
         global linkEntry
         global fileName
+        global downloadFlag
 
         link = linkEntry.get_text()
         video_name = fileName.get_text()
@@ -136,6 +139,10 @@ class Handler:
         string = ''
 
         while True:
+            if(downloadFlag == 0):
+                #print "stopping"
+                download.sendcontrol('c')
+                break
             try:
                 string = download.read_nonblocking(1000, 10)
             except:
