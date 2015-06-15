@@ -9,8 +9,8 @@ try:
     import pexpect
 except ImportError:
     print "The following module need to be installed before you run this program"
-    print pexpect
-    print Gtk
+    print "pexpect"
+    print "python GObject"
     
 #import serial
 #from scipy.signal import
